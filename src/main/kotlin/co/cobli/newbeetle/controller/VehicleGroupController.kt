@@ -12,7 +12,9 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.support.WebExchangeBindException
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
+import java.lang.RuntimeException
 import java.util.*
 import javax.validation.Valid
 import kotlin.collections.ArrayList
@@ -26,13 +28,31 @@ class VehicleGroupController(@Autowired val repository: VehicleGroupRepository, 
     fun getVehicles(@PathVariable fleetId: UUID): Flux<VehicleGroup> = Flux.fromIterable(repository.findByFleetId(fleetId)).subscribeOn(Schedulers.boundedElastic());
 
     @PostMapping
-    fun createGroup(@PathVariable fleetId: UUID, @Valid @RequestBody vehicleGroupCreate: VehicleGroupCreate): VehicleGroup {
-        return repository.save(vehicleGroupCreate.toVehicleGroup(fleetId, UUID.randomUUID()))
+    fun createGroup(@PathVariable fleetId: UUID, @Valid @RequestBody vehicleGroupCreate: VehicleGroupCreate): Mono<VehicleGroup> {
+        return Mono.fromCallable {
+            repository.save(vehicleGroupCreate.toVehicleGroup(fleetId, UUID.randomUUID()))
+        }.subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/{groupId}")
+    fun getGroup(@PathVariable fleetId: UUID, @PathVariable groupId: UUID): Mono<VehicleGroup> {
+        return Mono.fromCallable {
+            repository.findByIdAndFleetId(groupId, fleetId).orElseThrow{ RuntimeException("Group not found :(") }
+        }.subscribeOn(Schedulers.boundedElastic());
     }
 
     @PutMapping("/{groupId}/vehicles")
-    fun setGroupVehicles(@PathVariable fleetId: UUID, @PathVariable groupId: UUID, @RequestBody vehicleIds: List<UUID>): VehicleGroup {
-        return groupService.setGroupVehicles(fleetId, groupId, vehicleIds)
+    fun setGroupVehicles(@PathVariable fleetId: UUID, @PathVariable groupId: UUID, @RequestBody vehicleIds: List<UUID>): Mono<VehicleGroup> {
+        return Mono.fromCallable {
+            groupService.setGroupVehicles(fleetId, groupId, vehicleIds)
+        }.subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/{groupId}/vehicles")
+    fun getGroupVehicles(@PathVariable fleetId: UUID, @PathVariable groupId: UUID): Flux<Vehicle> {
+        return Flux.fromIterable(
+            repository.findByIdAndFleetId(groupId, fleetId).map { vehicleGroup ->  vehicleGroup.vehicles}.orElseThrow{ RuntimeException("Group not found :(") }
+        ).subscribeOn(Schedulers.boundedElastic());
     }
 
     @PutMapping("/vehicles")
