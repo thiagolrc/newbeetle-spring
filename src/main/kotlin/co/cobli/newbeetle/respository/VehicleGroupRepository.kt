@@ -6,6 +6,8 @@ import java.util.*
 
 interface VehicleGroupRepository : CrudRepository<VehicleGroup, UUID> {
 
+    fun findByNameAndFleetId(name: String, fleetId: UUID): Optional<VehicleGroup>
+
     fun findByFleetId(fleetId: UUID): List<VehicleGroup>
 
     fun findByIdAndFleetId(id: UUID, fleetId: UUID): Optional<VehicleGroup>

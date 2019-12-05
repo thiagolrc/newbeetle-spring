@@ -5,13 +5,14 @@ import co.cobli.newbeetle.service.GroupService
 import co.cobli.newbeetle.model.VehicleGroup
 import co.cobli.newbeetle.respository.VehicleGroupRepository
 import co.cobli.newbeetle.respository.VehicleRepository
+import co.cobli.newbeetle.validator.ValidationError
+import co.cobli.newbeetle.validator.VehicleGroupValidator
 import co.cobli.newbeetle.view.VehicleGroupCreate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.support.WebExchangeBindException
-import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
@@ -19,24 +20,32 @@ import java.lang.RuntimeException
 import java.util.*
 import javax.validation.Valid
 import kotlin.collections.ArrayList
-import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.web.reactive.function.BodyInserters
-import org.springframework.web.reactive.function.BodyInserters.*
-import org.springframework.web.reactive.function.server.ServerResponse.*
+import org.springframework.http.ResponseEntity
+import java.util.Optional.empty as empty
+import java.util.Optional.of as of
 
 @RestController
 @RequestMapping("/fleets/{fleetId}/groups")
-class VehicleGroupController(@Autowired val repository: VehicleGroupRepository, @Autowired val groupService: GroupService, @Autowired val vehicleRepository: VehicleRepository) {
-
+class VehicleGroupController(@Autowired val repository: VehicleGroupRepository,
+                             @Autowired val groupService: GroupService,
+                             @Autowired val vehicleRepository: VehicleRepository,
+                             @Autowired val vehicleGroupValidator: VehicleGroupValidator) {
 
     @GetMapping
     fun getVehicles(@PathVariable fleetId: UUID): Flux<VehicleGroup> = Flux.fromIterable(repository.findByFleetId(fleetId)).subscribeOn(Schedulers.boundedElastic())
 
     @PostMapping
-    fun createGroup(@PathVariable fleetId: UUID, @Valid @RequestBody vehicleGroupCreate: VehicleGroupCreate): Mono<VehicleGroup> {
-        return Mono.fromCallable {
-            repository.save(vehicleGroupCreate.toVehicleGroup(fleetId, UUID.randomUUID()))
-        }.subscribeOn(Schedulers.boundedElastic())
+    fun createGroup(@PathVariable fleetId: UUID, @Valid @RequestBody vehicleGroupCreate: VehicleGroupCreate): ResponseEntity<Response<VehicleGroup>> {
+        val maybeValidationError = vehicleGroupValidator.validateGroup(vehicleGroupCreate, fleetId)
+
+        if(maybeValidationError.isPresent) {
+            val validationError = maybeValidationError.get()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseError(validationError.errors))
+        }
+
+        val creatorId = UUID.fromString("9525c823-66ae-46ab-b6e4-65eaeb69c5a5")
+        val createdGroup = groupService.createGroup(vehicleGroupCreate, fleetId, creatorId)
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseSuccess(createdGroup))
     }
 
     @GetMapping("/{groupId}")
@@ -71,7 +80,7 @@ class VehicleGroupController(@Autowired val repository: VehicleGroupRepository, 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WebExchangeBindException::class)
-    fun handleValidationExceptions(ex: WebExchangeBindException): HashMap<String, String> {
+    fun handleValidationExceptions(ex: WebExchangeBindException): ValidationError {
         val errors = HashMap<String, String>()
         ex.bindingResult.allErrors.forEach { error ->
             val fieldName = (error as FieldError).field
@@ -80,7 +89,7 @@ class VehicleGroupController(@Autowired val repository: VehicleGroupRepository, 
                 errors[fieldName] = errorMessage
             }
         }
-        return errors
+        return ValidationError(errors)
     }
 
 }

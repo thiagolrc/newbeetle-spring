@@ -6,8 +6,8 @@ import javax.validation.constraints.NotBlank
 import javax.validation.constraints.Size
 
 data class VehicleGroupCreate(
-        @field:NotBlank
-        @field:Size(max = 100)
+        @field:NotBlank(message = "mustNotBeBlank")
+        @field:Size(max = 100, message = "maxLength")
         val name: String) {
 
     fun toVehicleGroup(fleetId: UUID, creatorId: UUID): VehicleGroup {
