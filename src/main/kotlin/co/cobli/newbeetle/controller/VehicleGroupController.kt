@@ -1,32 +1,25 @@
 package co.cobli.newbeetle.controller
 
 import co.cobli.newbeetle.model.Vehicle
-import co.cobli.newbeetle.service.GroupService
 import co.cobli.newbeetle.model.VehicleGroup
 import co.cobli.newbeetle.respository.VehicleGroupRepository
 import co.cobli.newbeetle.respository.VehicleRepository
+import co.cobli.newbeetle.service.GroupService
 import co.cobli.newbeetle.validator.ValidationError
 import co.cobli.newbeetle.validator.VehicleGroupValidator
 import co.cobli.newbeetle.view.VehicleGroupCreate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.support.WebExchangeBindException
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
-import java.lang.RuntimeException
 import java.util.*
 import javax.validation.Valid
 import kotlin.collections.ArrayList
-import java.util.Optional.empty as empty
-import java.util.Optional.of as of
-import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.http.ResponseEntity
-import org.springframework.web.reactive.function.BodyInserters
-import org.springframework.web.reactive.function.BodyInserters.*
-import org.springframework.web.reactive.function.server.ServerResponse.*
 
 
 @RestController
