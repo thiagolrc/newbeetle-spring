@@ -11,10 +11,10 @@ import org.springframework.web.reactive.function.server.RouterFunctions.route
 
 @Configuration
 @ComponentScan("co.cobli.newbeetle")
-class RoutesConfiguration(private val groupHanlder: GroupHandler) {
+class RoutesConfiguration(private val groupHandler: GroupHandler) {
 
 	@Bean
 	fun notFound(): RouterFunction<ServerResponse> {
-		return route().GET("/v2/fleets/{fleetId}/groups/{groupId}", groupHanlder::getGroup).build()
+		return route().GET("/v2/fleets/{fleetId}/groups/{groupId}", groupHandler::getGroup).build()
 	}
 }
