@@ -20,6 +20,7 @@ import java.util.*
 import javax.validation.Valid
 import kotlin.collections.ArrayList
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.http.ResponseEntity
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.BodyInserters.*
 import org.springframework.web.reactive.function.server.ServerResponse.*
@@ -44,6 +45,12 @@ class VehicleGroupController(@Autowired val repository: VehicleGroupRepository, 
         return Mono.fromCallable {
             repository.findByIdAndFleetId(groupId, fleetId).orElseThrow { RuntimeException("Group not found :(") }
         }.subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @GetMapping("/{groupId}/notasync")
+    fun getGroupNotAsync(@PathVariable fleetId: UUID, @PathVariable groupId: UUID): ResponseEntity<VehicleGroup> {
+        val maybeGroup = repository.findByIdAndFleetId(groupId, fleetId)
+        return ResponseEntity.of(maybeGroup)
     }
 
     @PutMapping("/{groupId}/vehicles")

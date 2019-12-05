@@ -20,7 +20,7 @@ class GroupHandler(@Autowired val repository: VehicleGroupRepository) {
         val fleetId = UUID.fromString(request.pathVariable("fleetId"))
 
         val monoVehicleGroup = Mono.fromCallable {
-            repository.findByIdAndFleetId(groupId, fleetId).orElseThrow { RuntimeException("Group not found :(") }
+            repository.findByIdAndFleetId(groupId, fleetId)
         }.subscribeOn(Schedulers.boundedElastic());
 
         return okOrNotFoundMono(monoVehicleGroup)
