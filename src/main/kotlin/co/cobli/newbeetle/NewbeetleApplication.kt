@@ -1,10 +1,12 @@
 package co.cobli.newbeetle
 
+import co.cobli.newbeetle.service.GroupService
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import springfox.documentation.builders.ApiInfoBuilder
 import springfox.documentation.builders.PathSelectors
@@ -18,7 +20,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebFlux
 @SpringBootApplication(exclude = [ErrorMvcAutoConfiguration::class])
 @EnableTransactionManagement
 @EnableSwagger2WebFlux
-class NewbeetleApplication {
+class NewbeetleApplication(private val service: GroupService) {
 	@Bean
 	fun api(): Docket {
 		return Docket(DocumentationType.SWAGGER_2).select()
